@@ -1,0 +1,280 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ESP32 Device Manager</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/xterm.css">
+</head>
+<body>
+    <div class="container-fluid">
+        <div class="row">
+            <!-- Header -->
+            <div class="col-12">
+                <div class="app-header">
+                    <h1><i class="fas fa-microchip"></i> ESP32 Device Manager</h1>
+                    <p class="text-muted">Serial communication and device configuration tool</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="row">
+            <!-- Serial Connection Group -->
+            <div class="col-md-6">
+                <div class="group-card">
+                    <div class="group-header">
+                        <h4><i class="fas fa-link"></i> Serial Connection</h4>
+                        <p class="text-muted">Connect to device and monitor serial communication</p>
+                    </div>
+
+                    <!-- Connection Status -->
+                    <div class="section-card">
+                        <h5><i class="fas fa-plug"></i> Device Connection</h5>
+                        <div class="form-group">
+                            <label for="configBaudRate">Serial Baud Rate:</label>
+                            <select class="form-control" id="configBaudRate">
+                                <option value="115200" selected>115200</option>
+                                <option value="9600">9600</option>
+                                <option value="19200">19200</option>
+                                <option value="38400">38400</option>
+                                <option value="57600">57600</option>
+                                <option value="230400">230400</option>
+                                <option value="460800">460800</option>
+                                <option value="921600">921600</option>
+                            </select>
+                        </div>
+                        <div class="status-indicator" id="serialConnectionStatus">
+                            <span class="status-dot disconnected"></span>
+                            <span class="status-text">Serial Disconnected</span>
+                        </div>
+                        <button class="btn btn-primary btn-sm w-100 mt-2" id="serialConnectBtn">
+                            <i class="fas fa-link"></i> Connect Serial
+                        </button>
+                        <button class="btn btn-danger btn-sm w-100 mt-2" id="serialDisconnectBtn" style="display: none;">
+                            <i class="fas fa-unlink"></i> Disconnect Serial
+                        </button>
+                    </div>
+
+                    <!-- Serial Console -->
+                    <div class="section-card">
+                        <div class="console-header">
+                            <h5><i class="fas fa-terminal"></i> Serial Console</h5>
+                            <div class="console-controls">
+                                <button class="btn btn-sm btn-outline-secondary" id="debugToggleBtn">
+                                    <i class="fas fa-bug"></i> Debug
+                                </button>
+                                <button class="btn btn-sm btn-outline-secondary" id="pauseSerialLogBtn">
+                                    <i class="fas fa-pause"></i> Pause
+                                </button>
+                                <button class="btn btn-sm btn-outline-secondary" id="autoscrollSerialBtn">
+                                    <i class="fas fa-arrow-down"></i> Auto
+                                </button>
+                                <button class="btn btn-sm btn-outline-secondary" id="timestampSerialBtn">
+                                    <i class="fas fa-clock"></i> Time
+                                </button>
+                                <button class="btn btn-sm btn-outline-secondary" id="flushSerialBufferBtn">
+                                    <i class="fas fa-sync"></i> Flush
+                                </button>
+                                <button class="btn btn-sm btn-outline-secondary" id="clearSerialLogBtn">
+                                    <i class="fas fa-trash"></i> Clear
+                                </button>
+                                <button class="btn btn-sm btn-outline-secondary" id="exportSerialLogBtn">
+                                    <i class="fas fa-download"></i> Export
+                                </button>
+                            </div>
+                        </div>
+                        <div class="console-container">
+                            <div class="console-output" id="serialOutput">
+                                <div class="log-entry info">
+                                    <span class="timestamp">[System]</span>
+                                    <span class="message">Serial console ready. Connect device to begin.</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="console-input">
+                            <div class="input-group">
+                                <input type="text" class="form-control" id="serialInput" placeholder="Enter command..." disabled>
+                                <button class="btn btn-outline-primary" id="sendCommandBtn" disabled>
+                                    <i class="fas fa-paper-plane"></i>
+                                </button>
+                            </div>
+                        </div>
+                        <!-- Connection Status Panel -->
+                        <div class="connection-status-panel" id="connectionStatusPanel" style="display: none;">
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <small class="text-muted">
+                                        <strong>Last Activity:</strong> <span id="lastActivityTime">Never</span>
+                                    </small>
+                                </div>
+                                <div class="col-md-6">
+                                    <small class="text-muted">
+                                        <strong>Retry Count:</strong> <span id="retryCount">0</span>
+                                    </small>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Device Configuration Group -->
+            <div class="col-md-6">
+                <div class="group-card">
+                    <div class="group-header">
+                        <h4><i class="fas fa-cogs"></i> Device Configuration</h4>
+                        <p class="text-muted">Load and configure device settings</p>
+                    </div>
+
+                    <!-- Configuration Loading -->
+                    <div class="section-card">
+                        <h5><i class="fas fa-download"></i> Configuration Loading</h5>
+                        <div class="alert alert-info">
+                            <i class="fas fa-info-circle"></i>
+                            <strong>Dynamic Configuration System:</strong> Click "Load Configuration" to request the ESP32's configuration schema and generate the form dynamically.
+                        </div>
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <button class="btn btn-primary" id="loadConfigBtn" disabled>
+                                    <i class="fas fa-download"></i> Load Configuration
+                                </button>
+                                <small class="text-muted d-block mt-1">Request configuration schema from ESP32</small>
+                            </div>
+                            <div class="col-md-6">
+                                <button class="btn btn-warning btn-sm" id="restartDeviceBtn" disabled>
+                                    <i class="fas fa-redo"></i> Restart Device
+                                </button>
+                                <small class="text-muted d-block mt-1">Restart the connected device</small>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Device Information -->
+                    <div class="section-card">
+                        <h5><i class="fas fa-info-circle"></i> Device Information</h5>
+                        <div id="deviceInfo" class="device-info-panel">
+                            <div class="alert alert-secondary">
+                                <i class="fas fa-microchip"></i>
+                                <strong>Device Info:</strong> Connect to a device to view information.
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Configuration Form -->
+                    <div class="section-card">
+                        <h5><i class="fas fa-edit"></i> Configuration Form</h5>
+                        <div id="configFormContainer">
+                            <div class="alert alert-warning">
+                                <i class="fas fa-exclamation-triangle"></i>
+                                <strong>No Configuration Loaded:</strong> Click "Load Configuration" to generate the configuration form.
+                            </div>
+                        </div>
+                        
+                        <!-- Configuration Actions -->
+                        <div class="mt-3">
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <button class="btn btn-primary btn-sm" id="saveConfigBtn" disabled>
+                                        <i class="fas fa-save"></i> Save Configuration
+                                    </button>
+                                    <button class="btn btn-outline-secondary btn-sm" id="exportConfigBtn" disabled>
+                                        <i class="fas fa-download"></i> Export Config
+                                    </button>
+                                </div>
+                                <div class="col-md-6 text-end">
+                                    <button class="btn btn-warning btn-sm" id="restartDeviceBtn">
+                                        <i class="fas fa-redo"></i> Restart Device
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Device Monitoring Group -->
+            <div class="row mt-4">
+                <div class="col-12">
+                    <div class="card">
+                        <div class="card-header">
+                            <h5><i class="fas fa-chart-line"></i> Device Monitoring</h5>
+                            <p class="card-text">Real-time monitoring of device status, network statistics, and I/O states.</p>
+                        </div>
+                        <div class="card-body">
+                            <div id="monitoringContainer">
+                                <!-- Network Status Panel -->
+                                <div class="monitoring-panel" id="networkStatusPanel">
+                                    <div class="panel-header">
+                                        <h6><i class="fas fa-network-wired"></i> Network Status</h6>
+                                        <span class="panel-status" id="networkStatusIndicator">Disconnected</span>
+                                    </div>
+                                    <div class="panel-content" id="networkStatusContent">
+                                        <div class="alert alert-secondary">
+                                            <i class="fas fa-info-circle"></i>
+                                            <strong>Network Status:</strong> Connect to device to view network information.
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Network Statistics Panel -->
+                                <div class="monitoring-panel" id="networkStatsPanel">
+                                    <div class="panel-header">
+                                        <h6><i class="fas fa-chart-bar"></i> Network Statistics</h6>
+                                        <span class="panel-status" id="networkStatsIndicator">No Data</span>
+                                    </div>
+                                    <div class="panel-content" id="networkStatsContent">
+                                        <div class="alert alert-secondary">
+                                            <i class="fas fa-info-circle"></i>
+                                            <strong>Network Statistics:</strong> Connect to device to view performance metrics.
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- I/O Status Panel -->
+                                <div class="monitoring-panel" id="ioStatusPanel">
+                                    <div class="panel-header">
+                                        <h6><i class="fas fa-microchip"></i> I/O Status</h6>
+                                        <span class="panel-status" id="ioStatusIndicator">No Data</span>
+                                    </div>
+                                    <div class="panel-content" id="ioStatusContent">
+                                        <div class="alert alert-secondary">
+                                            <i class="fas fa-info-circle"></i>
+                                            <strong>I/O Status:</strong> Connect to device to view I/O states.
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Device Data Panel -->
+                                <div class="monitoring-panel" id="deviceDataPanel">
+                                    <div class="panel-header">
+                                        <h6><i class="fas fa-database"></i> Device Data</h6>
+                                        <span class="panel-status" id="deviceDataIndicator">No Data</span>
+                                    </div>
+                                    <div class="panel-content" id="deviceDataContent">
+                                        <div class="alert alert-secondary">
+                                            <i class="fas fa-info-circle"></i>
+                                            <strong>Device Data:</strong> Connect to device to view device-specific data.
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <!-- Crypto-js for MD5 calculation -->
+    <script src="js/crypto-js.js"></script>
+    <!-- Xterm.js for terminal -->
+    <script src="js/xterm.min.js"></script>
+    <!-- Main application script -->
+    <script type="module" src="js/app.js"></script>
+</body>
+</html> 

@@ -1,0 +1,23 @@
+/media/temp/6E9A84429A8408B3/_VSC/WEB_UPLOAD/test-esp32-code/build/core/WMath.cpp.o: \
+ /home/temp/.arduino15/packages/esp32/hardware/esp32/3.2.1/cores/esp32/WMath.cpp \
+ /home/temp/.arduino15/packages/esp32/tools/esp32-arduino-libs/idf-release_v5.4-858a988d-v1/esp32s3/include/esp_system/include/esp_system.h \
+ /home/temp/.arduino15/packages/esp32/tools/esp32-arduino-libs/idf-release_v5.4-858a988d-v1/esp32s3/include/esp_common/include/esp_err.h \
+ /home/temp/.arduino15/packages/esp32/tools/esp32-arduino-libs/idf-release_v5.4-858a988d-v1/esp32s3/include/esp_common/include/esp_compiler.h \
+ /home/temp/.arduino15/packages/esp32/tools/esp32-arduino-libs/idf-release_v5.4-858a988d-v1/esp32s3/include/esp_common/include/esp_attr.h \
+ /home/temp/.arduino15/packages/esp32/tools/esp32-arduino-libs/idf-release_v5.4-858a988d-v1/esp32s3/include/esp_common/include/esp_bit_defs.h \
+ /home/temp/.arduino15/packages/esp32/tools/esp32-arduino-libs/idf-release_v5.4-858a988d-v1/esp32s3/include/esp_common/include/esp_idf_version.h \
+ /home/temp/.arduino15/packages/esp32/hardware/esp32/3.2.1/cores/esp32/esp32-hal-log.h \
+ /home/temp/.arduino15/packages/esp32/tools/esp32-arduino-libs/idf-release_v5.4-858a988d-v1/esp32s3/include/esp_timer/include/esp_timer.h \
+ /home/temp/.arduino15/packages/esp32/tools/esp32-arduino-libs/idf-release_v5.4-858a988d-v1/esp32s3/include/esp_hw_support/include/esp_etm.h \
+ /home/temp/.arduino15/packages/esp32/tools/esp32-arduino-libs/idf-release_v5.4-858a988d-v1/esp32s3/include/esp_rom/esp32s3/include/esp32s3/rom/ets_sys.h \
+ /home/temp/.arduino15/packages/esp32/tools/esp32-arduino-libs/idf-release_v5.4-858a988d-v1/esp32s3/include/soc/esp32s3/include/soc/soc.h \
+ /home/temp/.arduino15/packages/esp32/tools/esp32-arduino-libs/idf-release_v5.4-858a988d-v1/esp32s3/include/esp_common/include/esp_assert.h \
+ /home/temp/.arduino15/packages/esp32/tools/esp32-arduino-libs/idf-release_v5.4-858a988d-v1/esp32s3/include/soc/esp32s3/register/soc/reg_base.h \
+ /home/temp/.arduino15/packages/esp32/tools/esp32-arduino-libs/idf-release_v5.4-858a988d-v1/esp32s3/include/log/include/esp_log.h \
+ /home/temp/.arduino15/packages/esp32/tools/esp32-arduino-libs/idf-release_v5.4-858a988d-v1/esp32s3/include/esp_rom/include/esp_rom_sys.h \
+ /home/temp/.arduino15/packages/esp32/tools/esp32-arduino-libs/idf-release_v5.4-858a988d-v1/esp32s3/include/soc/esp32s3/include/soc/reset_reasons.h \
+ /home/temp/.arduino15/packages/esp32/tools/esp32-arduino-libs/idf-release_v5.4-858a988d-v1/esp32s3/include/log/include/esp_log_level.h \
+ /home/temp/.arduino15/packages/esp32/tools/esp32-arduino-libs/idf-release_v5.4-858a988d-v1/esp32s3/include/log/include/esp_log_color.h \
+ /home/temp/.arduino15/packages/esp32/tools/esp32-arduino-libs/idf-release_v5.4-858a988d-v1/esp32s3/include/log/include/esp_log_buffer.h \
+ /home/temp/.arduino15/packages/esp32/tools/esp32-arduino-libs/idf-release_v5.4-858a988d-v1/esp32s3/include/log/include/esp_log_timestamp.h \
+ /home/temp/.arduino15/packages/esp32/tools/esp32-arduino-libs/idf-release_v5.4-858a988d-v1/esp32s3/include/esp_hw_support/include/esp_random.h

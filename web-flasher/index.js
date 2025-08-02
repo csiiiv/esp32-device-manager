@@ -1,0 +1,1 @@
+Package version not found: web-serial-polyfill@2.0.2

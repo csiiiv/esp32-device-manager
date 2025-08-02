@@ -1,0 +1,17 @@
+[
+  {
+    "Sourcefile": null,
+    "Include": "",
+    "Includepath": "/home/temp/.arduino15/packages/esp32/hardware/esp32/3.2.1/cores/esp32"
+  },
+  {
+    "Sourcefile": null,
+    "Include": "",
+    "Includepath": "/home/temp/.arduino15/packages/esp32/hardware/esp32/3.2.1/variants/esp32s3"
+  },
+  {
+    "Sourcefile": "/media/temp/6E9A84429A8408B3/_VSC/WEB_UPLOAD/EMPTY/build/sketch/EMPTY.ino.cpp",
+    "Include": "",
+    "Includepath": null
+  }
+]
