@@ -1242,13 +1242,18 @@ void actionSetSharedData() {
     DistributedIOData testData;
     memset(&testData, 0, sizeof(DistributedIOData));
     testData.sharedData[0][0] = (1UL << testPattern); // Set one bit at a time (Input 1)
+    // Mirror to outputs for testing (Q follows I by default)
+    testData.sharedOutputs[0][0] = testData.sharedData[0][0];
+    testData.sharedOutputs[1][0] = testData.sharedData[1][0];
+    testData.sharedOutputs[2][0] = testData.sharedData[2][0];
     
     DATA_MGR.setDistributedIOSharedData(testData);
     IO_DEVICE.broadcastSharedData();
     
     DATA_MGR.updateStatus("Test bit " + String(testPattern) + " set");
     menuLog("Shared data test: set bit " + String(testPattern) + 
-           " (0x" + String(testData.sharedData[0][0], HEX) + ")", 3);
+           " (I0:0x" + String(testData.sharedData[0][0], HEX) + 
+           ", Q0:0x" + String(testData.sharedOutputs[0][0], HEX) + ")", 3);
 }
 
 void actionToggleTestMode() {

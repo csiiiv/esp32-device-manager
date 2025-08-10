@@ -431,27 +431,34 @@ void SerialCommandHandler::handleIOStatus() {
     uint32_t sharedDataInput0 = DATA_MGR.getSharedData(); // Backward compatibility
     bool myBitStateInput0 = DATA_MGR.getMyBitState(); // Backward compatibility
     
-    // Get shared data for all inputs
-    JsonArray sharedDataArray = doc.createNestedArray("shared_data");
-    JsonArray myBitStateArray = doc.createNestedArray("my_bit_states");
+    // Get shared inputs (I) and outputs (Q) arrays
+    JsonArray sharedDataArray = doc.createNestedArray("shared_data");                 // Inputs (I) - legacy key
+    JsonArray myBitStateArray = doc.createNestedArray("my_bit_states");               // My bit states for inputs - legacy key
+    JsonArray sharedOutputArray = doc.createNestedArray("shared_output_array");       // Outputs (Q) - new key
+    JsonArray myOutputStateArray = doc.createNestedArray("my_output_states_array");   // My output states - new key
     
-    for (int inputIndex = 0; inputIndex < 3; inputIndex++) {
-        // Get the shared data word for this input
-        DistributedIOData distributedData = DATA_MGR.getDistributedIOSharedData();
-        uint32_t inputSharedData = distributedData.sharedData[inputIndex][0];
-        sharedDataArray.add(inputSharedData);
-        
-        // Get my bit state for this input
-        bool myBitState = DATA_MGR.getMyBitState(inputIndex);
+    DistributedIOData distributedData = DATA_MGR.getDistributedIOSharedData();
+    uint8_t myBitIndex = DATA_MGR.getBitIndex();
+    int bitInWord = (myBitIndex < 32) ? (myBitIndex % 32) : 0;
+    
+    for (int i = 0; i < 3; i++) {
+        // Inputs
+        sharedDataArray.add(distributedData.sharedData[i][0]);
+        bool myBitState = DATA_MGR.getMyBitState(i);
         myBitStateArray.add(myBitState);
+        // Outputs
+        sharedOutputArray.add(distributedData.sharedOutputs[i][0]);
+        bool myOut = ((distributedData.sharedOutputs[i][0] >> bitInWord) & 0x01) != 0;
+        myOutputStateArray.add(myOut);
     }
     
     doc["input_states"] = inputStates;
     doc["output_states"] = outputStates;
     doc["shared_data_single"] = sharedDataInput0; // Backward compatibility - single value
     doc["my_bit_state_single"] = myBitStateInput0; // Backward compatibility - single value
-    doc["shared_data_array"] = sharedDataArray; // New multi-input array
-    doc["my_bit_states_array"] = myBitStateArray; // New multi-input array
+    doc["shared_data_array"] = sharedDataArray;          // New multi-input Inputs array
+    doc["my_bit_states_array"] = myBitStateArray;        // New multi-input Inputs my-bit array
+    // shared_output_array and my_output_states_array already created with correct keys above
     doc["input_change_count"] = IO_DEVICE.getInputChangeCount();
     doc["last_input_change"] = IO_DEVICE.getLastInputChangeTime();
     

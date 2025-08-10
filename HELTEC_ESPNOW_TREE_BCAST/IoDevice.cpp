@@ -279,41 +279,32 @@ void IoDevice::updateOutputs(uint8_t outputStates) {
 }
 
 void IoDevice::updateOutputsFromSharedData(const DistributedIOData& sharedData) {
-    // This maps the multi-input shared data to local outputs
-    // Input 1 shared data -> Output 1-8 (bits 0-7)
-    // Input 2 shared data -> Output 9-16 (bits 8-15) 
-    // Input 3 shared data -> Output 17-24 (bits 16-23)
-    
+    // New mapping: outputs are root-controlled per device bit index.
+    // For each local output N (0..2), set state from sharedOutputs[N][my_bit_index].
     uint8_t outputStates = 0;
-    
-    // Map Input 1 shared data to outputs 1-8 (if we have enough outputs)
-    if (outputCount >= 1) {
-        uint8_t input1Bits = sharedData.sharedData[0][0] & 0xFF;
-        outputStates |= (input1Bits & 0x07); // Use first 3 bits for 3 outputs
-    }
-    
-    // Map Input 2 shared data to outputs 4-6 (if we have enough outputs)
-    if (outputCount >= 4) {
-        uint8_t input2Bits = (sharedData.sharedData[1][0] >> 0) & 0x07;
-        outputStates |= (input2Bits << 3); // Use bits 3-5
-    }
-    
-    // Map Input 3 shared data to outputs 7-9 (if we have enough outputs)
-    if (outputCount >= 7) {
-        uint8_t input3Bits = (sharedData.sharedData[2][0] >> 0) & 0x07;
-        outputStates |= (input3Bits << 6); // Use bits 6-8
-    }
-    
-    ioLog("Updating outputs from multi-input shared data - old outputs: " + String(currentOutputStates, BIN) + 
-         " new outputs: " + String(outputStates, BIN) + 
-         " (shared: " + DATA_MGR.formatDistributedIOData(sharedData) + ")", 2);
-    
-    updateOutputs(outputStates);
-    
-    ioLog("Outputs updated from multi-input shared data: " + String(outputStates, BIN) + 
-         " (shared: " + DATA_MGR.formatDistributedIOData(sharedData) + ")", 3);
 
-    // Manually update the data manager to ensure the display reflects the new output state immediately.
+    uint8_t myBitIndex = DATA_MGR.getMyBitIndex();
+    if (!DATA_MGR.isValidBitIndex(myBitIndex)) {
+        ioLog("Invalid bit index for output mapping; forcing 0", 2);
+        myBitIndex = 0;
+    }
+
+    int bitInWord = myBitIndex % 32;
+    for (int outputIndex = 0; outputIndex < outputCount; outputIndex++) {
+        uint32_t word = sharedData.sharedOutputs[outputIndex][0];
+        bool state = ((word >> bitInWord) & 0x01) != 0;
+        if (state) {
+            outputStates |= (1 << outputIndex);
+        }
+    }
+
+    ioLog("Updating outputs from root-controlled shared outputs - old: " + String(currentOutputStates, BIN) +
+         " new: " + String(outputStates, BIN) +
+         " (shared: " + DATA_MGR.formatDistributedIOData(sharedData) + ")", 2);
+
+    updateOutputs(outputStates);
+
+    // Ensure display reflects the new output state immediately
     updateDeviceDataFromIO();
 }
 

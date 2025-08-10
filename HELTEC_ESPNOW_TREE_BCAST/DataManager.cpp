@@ -746,10 +746,12 @@ void DataManager::processDistributedIOUpdate(const TreeMessageHeader* header, co
     dataLog("CHILD: Received MSG_DISTRIBUTED_IO_UPDATE - size=" + String(payloadLen) + 
            " src=" + formatHID(header->src_hid) + " broadcaster=" + formatHID(header->broadcaster_hid), 2);
     
-    // Handle both old (4 bytes) and new (12 bytes) message formats
-    if (payloadLen != sizeof(DistributedIOData) && payloadLen != 4) {
-        dataLog("CHILD: Invalid distributed I/O update size: " + String(payloadLen) + 
-               " (expected " + String(sizeof(DistributedIOData)) + " or 4)", 1);
+    // Handle legacy (4 bytes), legacy multi-input (12 bytes), and current (sizeof(DistributedIOData)) formats
+    const int LEGACY_ONE_INPUT_BYTES = 4;
+    const int LEGACY_THREE_INPUTS_BYTES = 12; // 3 words inputs only
+    if (payloadLen != sizeof(DistributedIOData) && payloadLen != LEGACY_ONE_INPUT_BYTES && payloadLen != LEGACY_THREE_INPUTS_BYTES) {
+        dataLog("CHILD: Invalid distributed I/O update size: " + String(payloadLen) +
+               " (expected " + String(sizeof(DistributedIOData)) + ", " + String(LEGACY_THREE_INPUTS_BYTES) + " or " + String(LEGACY_ONE_INPUT_BYTES) + ")", 1);
         return;
     }
 
@@ -775,15 +777,19 @@ void DataManager::processDistributedIOUpdate(const TreeMessageHeader* header, co
     DistributedIOData receivedData;
     memset(&receivedData, 0, sizeof(DistributedIOData));
     
-    if (payloadLen == 4) {
+    if (payloadLen == LEGACY_ONE_INPUT_BYTES) {
         // Backward compatibility: old 4-byte format (single input)
         // Copy the single word to input 0 of the new structure
         memcpy(&receivedData.sharedData[0][0], payload, 4);
         dataLog("CHILD: Received legacy 4-byte format, mapping to Input 1", 2);
+    } else if (payloadLen == LEGACY_THREE_INPUTS_BYTES) {
+        // Legacy 12-byte format: inputs only (3 words). Outputs remain zero.
+        memcpy(&receivedData.sharedData[0][0], payload, LEGACY_THREE_INPUTS_BYTES);
+        dataLog("CHILD: Received legacy 12-byte multi-input format (inputs only)", 2);
     } else {
-        // New 12-byte format (multi-input)
+        // Current format: full inputs+outputs struct
         memcpy(&receivedData, payload, sizeof(DistributedIOData));
-        dataLog("CHILD: Received new multi-input format", 2);
+        dataLog("CHILD: Received current inputs+outputs format", 2);
     }
     
     dataLog("CHILD: Device " + formatHID(systemStatus.myHID) + 
@@ -881,15 +887,22 @@ void DataManager::computeAndBroadcastDistributedIO() {
     DistributedIOData currentSharedData = getDistributedIOSharedData();
     bool dataChanged = false;
     
-    // Compare all inputs in the new structure
-    for (int inputIndex = 0; inputIndex < MAX_INPUTS; inputIndex++) {
+    // Compare all inputs and outputs in the new structure
+    for (int inputIndex = 0; inputIndex < MAX_INPUTS && !dataChanged; inputIndex++) {
         for (int wordIndex = 0; wordIndex < MAX_DISTRIBUTED_IO_BITS / 32; wordIndex++) {
             if (newSharedData.sharedData[inputIndex][wordIndex] != currentSharedData.sharedData[inputIndex][wordIndex]) {
                 dataChanged = true;
                 break;
             }
         }
-        if (dataChanged) break;
+    }
+    for (int outIndex = 0; outIndex < MAX_INPUTS && !dataChanged; outIndex++) {
+        for (int wordIndex = 0; wordIndex < MAX_DISTRIBUTED_IO_BITS / 32; wordIndex++) {
+            if (newSharedData.sharedOutputs[outIndex][wordIndex] != currentSharedData.sharedOutputs[outIndex][wordIndex]) {
+                dataChanged = true;
+                break;
+            }
+        }
     }
     
     if (dataChanged) {
@@ -973,6 +986,12 @@ DistributedIOData DataManager::computeSharedDataFromInputs() const {
         }
     }
     
+    // Default output logic (Q): pass-through from inputs (I) for now.
+    // Root owns outputs and may change this logic later.
+    for (int idx = 0; idx < MAX_INPUTS; idx++) {
+        sharedData.sharedOutputs[idx][0] = sharedData.sharedData[idx][0];
+    }
+
     dataLog("Final shared data computed: " + formatDistributedIOData(sharedData), 3);
     return sharedData;
 }
@@ -1029,6 +1048,7 @@ String DataManager::formatHID(uint16_t hid) const {
 
 String DataManager::formatDistributedIOData(const DistributedIOData& data) const {
     String result = "";
+    // Inputs (I)
     for (int inputIndex = 0; inputIndex < MAX_INPUTS; inputIndex++) {
         if (inputIndex > 0) result += " | ";
         result += "I" + String(inputIndex + 1) + ":";
@@ -1036,6 +1056,18 @@ String DataManager::formatDistributedIOData(const DistributedIOData& data) const
             if (wordIndex > 0) result += " ";
             char wordStr[12];
             snprintf(wordStr, sizeof(wordStr), "0x%08lX", data.sharedData[inputIndex][wordIndex]);
+            result += String(wordStr);
+        }
+    }
+    result += " || ";
+    // Outputs (Q)
+    for (int outIndex = 0; outIndex < MAX_INPUTS; outIndex++) {
+        if (outIndex > 0) result += " | ";
+        result += "Q" + String(outIndex + 1) + ":";
+        for (int wordIndex = 0; wordIndex < MAX_DISTRIBUTED_IO_BITS / 32; wordIndex++) {
+            if (wordIndex > 0) result += " ";
+            char wordStr[12];
+            snprintf(wordStr, sizeof(wordStr), "0x%08lX", data.sharedOutputs[outIndex][wordIndex]);
             result += String(wordStr);
         }
     }

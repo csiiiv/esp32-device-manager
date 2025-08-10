@@ -30,14 +30,16 @@ class Preferences;
 // ============================================================================
 
 /**
- * @brief Distributed I/O data structure - 3 inputs x 32 bits each
- * Structure: sharedData[inputIndex][bitIndex]
- * - sharedData[0][bitIndex] = Input 1 status for each device
- * - sharedData[1][bitIndex] = Input 2 status for each device  
- * - sharedData[2][bitIndex] = Input 3 status for each device
+ * @brief Distributed I/O data structure - 3 inputs x 32 bits each AND 3 outputs x 32 bits each
+ * Structure:
+ *  - sharedData[inputIndex][bitIndex]      -> aggregated Inputs (I)
+ *  - sharedOutputs[outputIndex][bitIndex]  -> root-defined Outputs (Q)
  */
 typedef struct {
-    uint32_t sharedData[MAX_INPUTS][MAX_DISTRIBUTED_IO_BITS / 32]; // 3 inputs x 1 word each
+    // Inputs (I)
+    uint32_t sharedData[MAX_INPUTS][MAX_DISTRIBUTED_IO_BITS / 32];   // 3 inputs x 1 word each
+    // Outputs (Q)
+    uint32_t sharedOutputs[MAX_INPUTS][MAX_DISTRIBUTED_IO_BITS / 32]; // 3 outputs x 1 word each
 } __attribute__((packed)) DistributedIOData;
 
 /**

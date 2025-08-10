@@ -913,10 +913,20 @@ class ESP32DeviceManager {
                 0x87654321, // Input 2 shared data - different pattern
                 0xAAAAAAAA  // Input 3 shared data - alternating pattern
             ],
+            sharedOutputArray: [
+                0x11111111, // Output 1 shared data - sample
+                0x22222222, // Output 2 shared data - sample
+                0x33333333  // Output 3 shared data - sample
+            ],
             myBitStatesArray: [
                 true,   // Input 1 my bit state
                 false,  // Input 2 my bit state
                 true    // Input 3 my bit state
+            ],
+            myOutputStatesArray: [
+                true,
+                false,
+                true
             ],
             inputChangeCount: 42,
             lastInputChange: this.formatUptime(30000)
@@ -954,8 +964,8 @@ class ESP32DeviceManager {
         
         // Check if we have the new multi-input format
         if (Array.isArray(ioData.sharedDataArray) && ioData.sharedDataArray.length >= 3) {
-            // New multi-input format - Horizontal inputs per bit, grouped and tiled
-            sharedDataHTML += `<h6>Shared Data Overview (32 bits × 3 inputs)</h6>`;
+            // New multi-input format - Horizontal inputs+outputs per bit, grouped and tiled
+            sharedDataHTML += `<h6>Shared Data Overview (32 bits × 3 inputs × 3 outputs)</h6>`;
             sharedDataHTML += `<div class="shared-data-display">`;
             sharedDataHTML += `<div class="shared-data-bits horizontal-overview">`;
             
@@ -963,24 +973,27 @@ class ESP32DeviceManager {
                 const isMyBit = bitIndex === deviceBitIndex; // Use actual device bit index
                 sharedDataHTML += `<div class="bit-group ${isMyBit ? 'my-bit-group' : ''}">`;
                 sharedDataHTML += `<div class="bit-group-label">B${bitIndex}</div>`;
+                // Inputs row
                 sharedDataHTML += `<div class="input-group">`;
-                
                 for (let inputIndex = 0; inputIndex < 3; inputIndex++) {
                     const inputSharedData = ioData.sharedDataArray[inputIndex] || 0;
                     const bitActive = (inputSharedData & (1 << bitIndex)) !== 0;
-                    sharedDataHTML += `
-                        <div class="bit-item ${bitActive ? 'active' : 'inactive'} ${isMyBit ? 'my-bit' : ''}">
-                            ${inputIndex + 1}
-                        </div>
-                    `;
+                    sharedDataHTML += `<div class="bit-item ${bitActive ? 'active' : 'inactive'} ${isMyBit ? 'my-bit' : ''}">I${inputIndex + 1}</div>`;
                 }
-                
-                sharedDataHTML += `</div>`; // Close input-group
+                sharedDataHTML += `</div>`; // Close inputs
+                // Outputs row
+                sharedDataHTML += `<div class="input-group">`;
+                for (let outIndex = 0; outIndex < 3; outIndex++) {
+                    const outputSharedData = (ioData.sharedOutputArray && ioData.sharedOutputArray[outIndex]) || 0;
+                    const bitActiveQ = (outputSharedData & (1 << bitIndex)) !== 0;
+                    sharedDataHTML += `<div class="bit-item ${bitActiveQ ? 'active' : 'inactive'} ${isMyBit ? 'my-bit' : ''}">Q${outIndex + 1}</div>`;
+                }
+                sharedDataHTML += `</div>`; // Close outputs
                 sharedDataHTML += `</div>`; // Close bit-group
             }
             
             sharedDataHTML += `</div>`;
-            sharedDataHTML += `<small class="text-muted">Format: [Input1][Input2][Input3] for each bit. Highlighted group (B${deviceBitIndex}) is this device's assigned bit.${!this.isSerialConnected ? ' (Simulated Data)' : ''}</small>`;
+            sharedDataHTML += `<small class="text-muted">Format per bit: I:[1..3] then Q:[1..3]. Highlighted group (B${deviceBitIndex}) is this device's assigned bit.${!this.isSerialConnected ? ' (Simulated Data)' : ''}</small>`;
             sharedDataHTML += `</div>`;
         } else {
             // Backward compatibility - single input format
@@ -1908,8 +1921,10 @@ class ESP32DeviceManager {
             outputStates: jsonData.output_states || 0,
             sharedData: jsonData.shared_data_single || 0, // Backward compatibility
             myBitState: jsonData.my_bit_state_single || false, // Backward compatibility
-            sharedDataArray: jsonData.shared_data_array || [jsonData.shared_data_single || 0], // New multi-input array
-            myBitStatesArray: jsonData.my_bit_states_array || [jsonData.my_bit_state_single || false], // New multi-input array
+            sharedDataArray: jsonData.shared_data_array || [jsonData.shared_data_single || 0], // Inputs (I)
+            myBitStatesArray: jsonData.my_bit_states_array || [jsonData.my_bit_state_single || false], // My Inputs bit
+            sharedOutputArray: jsonData.shared_output_array || [jsonData.shared_output_single || 0], // Outputs (Q)
+            myOutputStatesArray: jsonData.my_output_states_array || [jsonData.my_output_state_single || false],
             inputChangeCount: jsonData.input_change_count || 0,
             lastInputChange: jsonData.last_input_change || 'N/A'
         };
@@ -1949,8 +1964,8 @@ class ESP32DeviceManager {
         
         // Check if we have the new multi-input format
         if (Array.isArray(ioData.sharedDataArray) && ioData.sharedDataArray.length >= 3) {
-            // New multi-input format - Horizontal inputs per bit, grouped and tiled
-            sharedDataHTML += `<h6>Shared Data Overview (32 bits × 3 inputs)</h6>`;
+            // New multi-input format - Horizontal inputs+outputs per bit, grouped and tiled
+            sharedDataHTML += `<h6>Shared Data Overview (32 bits × 3 inputs × 3 outputs)</h6>`;
             sharedDataHTML += `<div class="shared-data-display">`;
             sharedDataHTML += `<div class="shared-data-bits horizontal-overview">`;
             
@@ -1958,24 +1973,27 @@ class ESP32DeviceManager {
                 const isMyBit = bitIndex === deviceBitIndex; // Use actual device bit index
                 sharedDataHTML += `<div class="bit-group ${isMyBit ? 'my-bit-group' : ''}">`;
                 sharedDataHTML += `<div class="bit-group-label">B${bitIndex}</div>`;
+                // Inputs row
                 sharedDataHTML += `<div class="input-group">`;
-                
                 for (let inputIndex = 0; inputIndex < 3; inputIndex++) {
                     const inputSharedData = ioData.sharedDataArray[inputIndex] || 0;
                     const bitActive = (inputSharedData & (1 << bitIndex)) !== 0;
-                    sharedDataHTML += `
-                        <div class="bit-item ${bitActive ? 'active' : 'inactive'} ${isMyBit ? 'my-bit' : ''}">
-                            ${inputIndex + 1}
-                        </div>
-                    `;
+                    sharedDataHTML += `<div class="bit-item ${bitActive ? 'active' : 'inactive'} ${isMyBit ? 'my-bit' : ''}">I${inputIndex + 1}</div>`;
                 }
-                
-                sharedDataHTML += `</div>`; // Close input-group
+                sharedDataHTML += `</div>`; // Close inputs
+                // Outputs row
+                sharedDataHTML += `<div class="input-group">`;
+                for (let outIndex = 0; outIndex < 3; outIndex++) {
+                    const outputSharedData = (ioData.sharedOutputArray && ioData.sharedOutputArray[outIndex]) || 0;
+                    const bitActiveQ = (outputSharedData & (1 << bitIndex)) !== 0;
+                    sharedDataHTML += `<div class="bit-item ${bitActiveQ ? 'active' : 'inactive'} ${isMyBit ? 'my-bit' : ''}">Q${outIndex + 1}</div>`;
+                }
+                sharedDataHTML += `</div>`; // Close outputs
                 sharedDataHTML += `</div>`; // Close bit-group
             }
             
             sharedDataHTML += `</div>`;
-            sharedDataHTML += `<small class="text-muted">Format: [Input1][Input2][Input3] for each bit. Highlighted group (B${deviceBitIndex}) is this device's assigned bit.${!this.isSerialConnected ? ' (Simulated Data)' : ''}</small>`;
+            sharedDataHTML += `<small class="text-muted">Format per bit: I:[1..3] then Q:[1..3]. Highlighted group (B${deviceBitIndex}) is this device's assigned bit.${!this.isSerialConnected ? ' (Simulated Data)' : ''}</small>`;
             sharedDataHTML += `</div>`;
         } else {
             // Backward compatibility - single input format
