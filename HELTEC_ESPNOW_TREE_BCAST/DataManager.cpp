@@ -4,6 +4,7 @@
 #include "espnow_wrapper.h"
 #include "TreeNetwork.h"
 #include "MenuSystem.h"
+#include "OutputPolicy.h"
 #include <Preferences.h>
 
 // Logging macros
@@ -922,13 +923,33 @@ void DataManager::computeAndBroadcastDistributedIO() {
     }
 }
 
+/**
+ * build the tree-wide distributed I/O frame (inputs and outputs)
+ *
+ * Overview
+ * - I (Inputs): 3 × 32-bit bitmaps. Each bitIndex corresponds to one device.
+ *   If a device reports its local Input N active, we set bit "bitIndex" in
+ *   sharedData[N]. The root folds its own inputs and all aggregated devices.
+ * - Q (Outputs): 3 × 32-bit bitmaps. These are root-owned and define the
+ *   target output state for every device (per-output line) at its bitIndex.
+ *   Children do not compute outputs; they simply apply Q at their own bitIndex.
+ *
+ * Current policy
+ * - Q is a pass-through of I (Q[N] = I[N]). This keeps the behavior consistent
+ *   while we evolve the policy. To change global output logic, modify the
+ *   section marked "Default output logic (Q)" below.
+ *
+ * Returns
+ * - A fully-populated DistributedIOData structure with I and Q to be broadcast
+ *   by the root, and applied by children.
+ */
 DistributedIOData DataManager::computeSharedDataFromInputs() const {
     DistributedIOData sharedData;
     memset(&sharedData, 0, sizeof(DistributedIOData));
 
     dataLog("Computing shared data from inputs...", 4);
 
-    // --- Process Root Node's own inputs ---
+    // --- Fold the root node's own inputs into I ---
     if (isDeviceFullyConfigured()) {
         DeviceSpecificData myData = getMyDeviceData();
         dataLog("Root node input processing - input_states: " + String(myData.input_states, BIN) + 
@@ -940,7 +961,7 @@ DistributedIOData DataManager::computeSharedDataFromInputs() const {
             return sharedData;
         }
         
-        // Process all three inputs
+        // Process all three inputs (Input 1..3 => indices 0..2)
         for (int inputIndex = 0; inputIndex < MAX_INPUTS; inputIndex++) {
             // Check if this input is active (bit 0, 1, or 2)
             if ((myData.input_states & (1 << inputIndex)) != 0) {
@@ -958,7 +979,7 @@ DistributedIOData DataManager::computeSharedDataFromInputs() const {
                " BitIndex:" + String(isBitIndexConfigured()), 2);
     }
 
-    // --- Process all aggregated remote devices ---
+    // --- Fold all aggregated remote devices into I ---
     dataLog("Processing " + String(aggregatedDeviceCount) + " remote devices", 4);
     for (int i = 0; i < aggregatedDeviceCount; i++) {
         const DeviceSpecificData& deviceData = globalDataArray[i];
@@ -986,15 +1007,15 @@ DistributedIOData DataManager::computeSharedDataFromInputs() const {
         }
     }
     
-    // Default output logic (Q): pass-through from inputs (I) for now.
-    // Root owns outputs and may change this logic later.
-    for (int idx = 0; idx < MAX_INPUTS; idx++) {
-        sharedData.sharedOutputs[idx][0] = sharedData.sharedData[idx][0];
-    }
+    // --- Compute Q (Outputs) ---
+    // Delegated to OutputPolicy for easy user customization
+    OutputPolicy::computeOutputsFromInputs(sharedData);
 
     dataLog("Final shared data computed: " + formatDistributedIOData(sharedData), 3);
     return sharedData;
 }
+
+// NOTE: Output policy moved to OutputPolicy.{h,cpp}
 
 void DataManager::setDistributedIOSharedData(const DistributedIOData& sharedData) {
     distributedIOData = sharedData;

@@ -289,6 +289,8 @@ private:
     
     // Last sender MAC address storage
     uint8_t lastSenderMAC[6];
+
+      // Output policy lives in OutputPolicy.{h,cpp}
 };
 
 #define DATA_MGR DataManager::getInstance()

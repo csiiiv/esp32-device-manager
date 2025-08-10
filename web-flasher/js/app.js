@@ -973,16 +973,16 @@ class ESP32DeviceManager {
                 const isMyBit = bitIndex === deviceBitIndex; // Use actual device bit index
                 sharedDataHTML += `<div class="bit-group ${isMyBit ? 'my-bit-group' : ''}">`;
                 sharedDataHTML += `<div class="bit-group-label">B${bitIndex}</div>`;
-                // Inputs row
-                sharedDataHTML += `<div class="input-group">`;
+                // Inputs row (3 cells labelled I1..I3)
+                sharedDataHTML += `<div class="input-group row-i">`;
                 for (let inputIndex = 0; inputIndex < 3; inputIndex++) {
                     const inputSharedData = ioData.sharedDataArray[inputIndex] || 0;
                     const bitActive = (inputSharedData & (1 << bitIndex)) !== 0;
                     sharedDataHTML += `<div class="bit-item ${bitActive ? 'active' : 'inactive'} ${isMyBit ? 'my-bit' : ''}">I${inputIndex + 1}</div>`;
                 }
                 sharedDataHTML += `</div>`; // Close inputs
-                // Outputs row
-                sharedDataHTML += `<div class="input-group">`;
+                // Outputs row (3 cells labelled Q1..Q3)
+                sharedDataHTML += `<div class="input-group row-q">`;
                 for (let outIndex = 0; outIndex < 3; outIndex++) {
                     const outputSharedData = (ioData.sharedOutputArray && ioData.sharedOutputArray[outIndex]) || 0;
                     const bitActiveQ = (outputSharedData & (1 << bitIndex)) !== 0;
@@ -993,7 +993,7 @@ class ESP32DeviceManager {
             }
             
             sharedDataHTML += `</div>`;
-            sharedDataHTML += `<small class="text-muted">Format per bit: I:[1..3] then Q:[1..3]. Highlighted group (B${deviceBitIndex}) is this device's assigned bit.${!this.isSerialConnected ? ' (Simulated Data)' : ''}</small>`;
+            sharedDataHTML += `<small class="text-muted">Format per bit: I1 I2 I3 then Q1 Q2 Q3. Highlighted group (B${deviceBitIndex}) is this device's assigned bit.${!this.isSerialConnected ? ' (Simulated Data)' : ''}</small>`;
             sharedDataHTML += `</div>`;
         } else {
             // Backward compatibility - single input format
@@ -1016,7 +1016,7 @@ class ESP32DeviceManager {
             sharedDataHTML += `</div>`;
         }
         
-        sharedDataHTML += `<small class="text-muted">Format: [Input1][Input2][Input3] for each bit. Highlighted group (B${deviceBitIndex}) is this device's assigned bit.${!this.isSerialConnected ? ' (Simulated Data)' : ''}</small>`;
+        sharedDataHTML += `<small class="text-muted">Format per bit: I:[1..3] then Q:[1..3]. Highlighted group (B${deviceBitIndex}) is this device's assigned bit.${!this.isSerialConnected ? ' (Simulated Data)' : ''}</small>`;
         sharedDataHTML += `</div>`;
         
         console.log('📄 Generated shared data HTML length:', sharedDataHTML.length);
@@ -1973,20 +1973,22 @@ class ESP32DeviceManager {
                 const isMyBit = bitIndex === deviceBitIndex; // Use actual device bit index
                 sharedDataHTML += `<div class="bit-group ${isMyBit ? 'my-bit-group' : ''}">`;
                 sharedDataHTML += `<div class="bit-group-label">B${bitIndex}</div>`;
-                // Inputs row
-                sharedDataHTML += `<div class="input-group">`;
+                // Inputs row (row label + 3 cells)
+                sharedDataHTML += `<div class="input-group row-i">`;
+                sharedDataHTML += `<div class="row-label">I:</div>`;
                 for (let inputIndex = 0; inputIndex < 3; inputIndex++) {
                     const inputSharedData = ioData.sharedDataArray[inputIndex] || 0;
                     const bitActive = (inputSharedData & (1 << bitIndex)) !== 0;
-                    sharedDataHTML += `<div class="bit-item ${bitActive ? 'active' : 'inactive'} ${isMyBit ? 'my-bit' : ''}">I${inputIndex + 1}</div>`;
+                    sharedDataHTML += `<div class="bit-item ${bitActive ? 'active' : 'inactive'} ${isMyBit ? 'my-bit' : ''}">${inputIndex + 1}</div>`;
                 }
                 sharedDataHTML += `</div>`; // Close inputs
-                // Outputs row
-                sharedDataHTML += `<div class="input-group">`;
+                // Outputs row (row label + 3 cells)
+                sharedDataHTML += `<div class="input-group row-q">`;
+                sharedDataHTML += `<div class="row-label">Q:</div>`;
                 for (let outIndex = 0; outIndex < 3; outIndex++) {
                     const outputSharedData = (ioData.sharedOutputArray && ioData.sharedOutputArray[outIndex]) || 0;
                     const bitActiveQ = (outputSharedData & (1 << bitIndex)) !== 0;
-                    sharedDataHTML += `<div class="bit-item ${bitActiveQ ? 'active' : 'inactive'} ${isMyBit ? 'my-bit' : ''}">Q${outIndex + 1}</div>`;
+                    sharedDataHTML += `<div class="bit-item ${bitActiveQ ? 'active' : 'inactive'} ${isMyBit ? 'my-bit' : ''}">${outIndex + 1}</div>`;
                 }
                 sharedDataHTML += `</div>`; // Close outputs
                 sharedDataHTML += `</div>`; // Close bit-group
@@ -2016,7 +2018,7 @@ class ESP32DeviceManager {
             sharedDataHTML += `</div>`;
         }
         
-        sharedDataHTML += `<small class="text-muted">Format: [Input1][Input2][Input3] for each bit. Highlighted group (B${deviceBitIndex}) is this device's assigned bit.${!this.isSerialConnected ? ' (Simulated Data)' : ''}</small>`;
+        sharedDataHTML += `<small class="text-muted">Format per bit: I1 I2 I3 then Q1 Q2 Q3. Highlighted group (B${deviceBitIndex}) is this device's assigned bit.${!this.isSerialConnected ? ' (Simulated Data)' : ''}</small>`;
         sharedDataHTML += `</div>`;
         
         console.log('📄 Generated shared data HTML length:', sharedDataHTML.length);

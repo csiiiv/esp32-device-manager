@@ -1129,6 +1129,7 @@ select.form-control:focus {
     border-radius: 6px;
     padding: 1rem;
     margin-bottom: 1rem;
+    font-family: "Courier New", Courier, monospace; /* monospaced for alignment */
 }
 
 .shared-data-bits {
@@ -1147,9 +1148,9 @@ select.form-control:focus {
 }
 
 .bit-group {
-    display: flex;
-    flex-direction: row; /* Changed from column to row */
-    align-items: center;
+    display: grid;
+    grid-template-columns: 48px 1fr; /* fixed-width B label column for alignment */
+    grid-template-rows: auto auto;   /* I row then Q row */
     border: 1px solid #ddd;
     border-radius: 6px; /* Increased radius */
     padding: 6px; /* Increased padding from 4px */
@@ -1174,7 +1175,14 @@ select.form-control:focus {
     background: #fff;
     border-radius: 3px;
     border: 1px solid #ddd;
-    min-width: 30px; /* Increased from 25px */
+    width: 48px;               /* fixed width to normalize B0 vs B10 */
+    min-width: 48px;
+    grid-row: 1 / 3; /* span both I and Q rows */
+    align-self: stretch; /* occupy full rows */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-variant-numeric: tabular-nums; /* align digits visually */
 }
 
 .bit-group.my-bit-group .bit-group-label {
@@ -1187,7 +1195,7 @@ select.form-control:focus {
 .input-group {
     display: flex;
     flex-direction: row;
-    gap: 2px;
+    gap: 6px;
     align-items: center;
     justify-content: center;
     padding: 2px;
@@ -1195,7 +1203,11 @@ select.form-control:focus {
     border-radius: 4px;
     border: 1px solid #e0e0e0;
     flex: 1;
+    grid-column: 2 / 3; /* place to right of B label */
 }
+
+/* row-label no longer used with I:/Q:, keep for compatibility if present */
+.row-label { display: none; }
 
 .bit-item {
     width: 24px; /* Increased from 18px */
@@ -1218,9 +1230,15 @@ select.form-control:focus {
 }
 
 .bit-item.active {
-    background: #28a745;
+    background: #28a745; /* green for inputs */
     color: white;
     border-color: #1e7e34;
+}
+
+/* Output cells in Q rows use red when active */
+.row-q .bit-item.active {
+    background: #dc3545; /* bootstrap danger red */
+    border-color: #c82333;
 }
 
 .bit-item.my-bit {
